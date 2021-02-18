@@ -5,6 +5,13 @@ Vector::Vector(int size): size(size){
 	m.resize(size);
 }
 
+Vector::Vector(float x, float y, float z): size(3){
+	m.resize(3);
+	m[0] = x;
+	m[1] = y;
+	m[2] = z;
+}
+
 float& Vector::operator[] (int off){
 	assert(off >= 0 && off < size);
 	

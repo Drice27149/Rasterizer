@@ -5,6 +5,7 @@
 class Vector{
 public:
 	Vector(int size = 3);
+	Vector(float x, float y, float z);
 	void init(float d[]);
 	void init(std::vector<float> d);
 	float& operator[] (int off);

@@ -5,6 +5,6 @@
 class Loader{
 public:
 	void loadFile(std::string filename);
-private:
+public:
 	std::vector<Triangle> triangles;
 };
