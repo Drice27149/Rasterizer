@@ -10,7 +10,7 @@ public:
 	Scene(int width, int height);
 	void add(Object* object);
 	void add(Light* light);
-private:
+public:
 	int width;
 	int height;
 	std::vector<Object*> objects;

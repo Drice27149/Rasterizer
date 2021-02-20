@@ -11,6 +11,7 @@ public:
 	std::vector<float>& operator[] (int off);
 	Matrix operator* (Matrix& other);
 	Vector operator* (Vector& other);
+	void print();
 protected:
 	std::vector<std::vector<float> > m;
 public:

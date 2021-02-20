@@ -49,3 +49,14 @@ void Matrix::init(float d[]){
 		}
 	}
 }
+
+void Matrix::print(){
+	printf("row = %d, col = %d\n",row, col);
+	for(int i = 0; i < row; i++){
+		for(int j = 0; j < col; j++){
+			printf("%.3f ",m[i][j]);
+		}
+		printf("\n");
+	}
+}
+

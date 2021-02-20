@@ -8,6 +8,6 @@ class Object {
 public:
 	Object(std::string filename);
 	Object(std::vector<Triangle> triangles);
-private:
+public:
 	std::vector<Triangle> triangles;
 };

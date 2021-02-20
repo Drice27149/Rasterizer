@@ -97,6 +97,22 @@ void Vector::init(std::vector<float> d){
 	for(int i = 0; i < size; i++) m[i] = d[i];
 }
 
+void Vector::reduce(int d){
+	assert(size >= d);
+	while(size != d){
+		size--;
+		m.pop_back();
+	}
+}
+
+void Vector::print(){
+	printf("size = %d: ",size);
+	for(float u: m){
+		printf("%.3f ",u);
+	}
+	printf("\n");
+}
+
 
 
 

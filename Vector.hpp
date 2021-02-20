@@ -14,6 +14,8 @@ public:
 	Vector operator+ (Vector& other);
 	Vector operator- (Vector& other);
 	void normalize();
+	void reduce(int d);
+	void print();
 	float length();
 	static float dotProduct(Vector u, Vector v);
 	static Vector crossProduct(Vector u, Vector v);

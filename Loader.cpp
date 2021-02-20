@@ -5,10 +5,12 @@
 #include "Vector.hpp"
 
 int isNumber(char c){
-	return (c >= '0' && c <= '9') || (c == '.');
+	return (c >= '0' && c <= '9') || (c == '.') || (c =='-');
 }
 
 float stringToFloat(std::string& s, int l, int r){
+	int neg = 0;
+	if(s[l] == '-') neg = 1, l++;
 	int dotPos = r+1;
 	for(int i = l; i <= r; i++) if(s[i] == '.') dotPos = i;
 	float left = 0.0f, right = 0.0f;
@@ -18,13 +20,17 @@ float stringToFloat(std::string& s, int l, int r){
 	for(int i = r; i >= dotPos+1; i--){
 		right = right * 0.1 + (s[i] - '0');
 	}
-	return left + right * 0.1;
+	if(!neg) return left + right * 0.1;
+	else return -(left + right * 0.1);
 }
 
 int stringToInt(std::string& s, int l, int r){
+	int neg = 0;
+	if(s[l] == '-') neg = 1, l++;
 	int left = 0;
 	for(int i = l; i <= r; i++) left = left * 10 + s[i] - '0';
-	return left;
+	if(!neg) return left;
+	else return -left;
 }
 
 std::vector<float> parseFloat(std::string line){

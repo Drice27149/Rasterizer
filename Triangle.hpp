@@ -6,7 +6,7 @@
 class Triangle{
 public:
 	Triangle(Vector vx, Vector vy, Vector vz);
-private:
+public:
 	Vector vertex[3];
 	Vector normal;
 };
