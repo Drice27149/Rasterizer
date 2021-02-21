@@ -69,6 +69,8 @@ void Loader::loadFile(std::string fileName){
 	std::vector<Vector> vertexs;
 	triangles.clear();
 	
+	int cnt = 0;
+	
 	while(std::getline(infile, line)){
 		if(line[0] == 'v'){
 			std::vector<float> nums = parseFloat(line);
@@ -81,14 +83,19 @@ void Loader::loadFile(std::string fileName){
 			// vertex index start from 1
 			// option one, compute normal based on given vertex order
 			// option two, render both side of the triangle
+			cnt++;
+			if(cnt == 11) cnt--;
 			std::vector<int> nums = parseInt(line); 
-			triangles.push_back(Triangle(vertexs[nums[0]-1], vertexs[nums[1]-1], vertexs[nums[2]-1]));
+			Triangle triangle(vertexs[nums[0]-1], vertexs[nums[1]-1], vertexs[nums[2]-1]);
+			triangle.color = Vector((float)cnt*0.05, (float)cnt*0.05, (float)cnt*0.05); // temp
+			triangles.push_back(triangle);
 		}
 		else{
 			int haveOtherToken = 1;
 			assert(haveOtherToken == 0);
 		}
 	}
+	printf("cnt = %d\n",cnt);
 }
 
 

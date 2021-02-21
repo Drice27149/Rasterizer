@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Scene.hpp"
+#include "Triangle.hpp"
 
 class Renderer {
 public:
 	void render(Scene* scene);
-	void renderTriangle(Vector* vScreen, Vector* vWorld);
+	void renderTriangle(Vector* vScreen, Triangle* t);
 	void writeImage(const char* filename);
 public:
 	// eye position, gaze & up direction

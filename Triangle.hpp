@@ -9,4 +9,5 @@ public:
 public:
 	Vector vertex[3];
 	Vector normal;
+	Vector color;
 };

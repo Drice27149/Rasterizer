@@ -26,7 +26,7 @@ Matrix getCameraTransformation(Vector e, Vector g, Vector t){
 		1.0, 0, 0, -e[0],
 		0, 1.0, 0, -e[1],
 		0, 0, 1.0, -e[2],
-		0, 0, 0, 1
+		0, 0, 0, 1.0
 	};
 	translation.init(td);
 	
@@ -110,9 +110,15 @@ int isInsideTriangle(Vector* v, Vector u){
 	return positive==3 || negative==3;
 }
 
+void getBarycentricCoordinates(Vector* v, float x, float y, float& alpha, float& beta, float& gamma){
+	alpha = (x*(v[1][1] - v[2][1]) + (v[2][0] - v[1][0])*y + v[1][0]*v[2][1] - v[2][0]*v[1][1]) / (v[0][0]*(v[1][1] - v[2][1]) + (v[2][0] - v[1][0])*v[0][1] + v[1][0]*v[2][1] - v[2][0]*v[1][1]);
+    beta = (x*(v[2][1] - v[0][1]) + (v[0][0] - v[2][0])*y + v[2][0]*v[0][1] - v[0][0]*v[2][1]) / (v[1][0]*(v[2][1] - v[0][1]) + (v[0][0] - v[2][0])*v[1][1] + v[2][0]*v[0][1] - v[0][0]*v[2][1]);
+	gamma = 1.0 - alpha - beta;
+}
+
 // vs: screen space coordinate
-// vw: world space coordinate, before camera transformation
-void Renderer::renderTriangle(Vector* vs, Vector* vw){
+// triangle: world space triangle, before camera transformation
+void Renderer::renderTriangle(Vector* vs, Triangle* triangle){
 	float maxX = max(vs[0][0], vs[1][0], vs[2][0]);
 	float minX = min(vs[0][0], vs[1][0], vs[2][0]);
 	float maxY = max(vs[0][1], vs[1][1], vs[2][1]);
@@ -129,8 +135,13 @@ void Renderer::renderTriangle(Vector* vs, Vector* vw){
 			float yf = (float)y + 0.5;
 			Vector u(xf, yf, 0.0f);
 			if(isInsideTriangle(vs, u)){
-				// missing: depth test
-				frameBuffer[y * width + x] = Vector(1.0, 1.0, 1.0); 
+				float alpha, beta, gamma;
+				getBarycentricCoordinates(vs, xf, yf, alpha, beta, gamma);
+				float z = 1.0 / (alpha/vs[0][2] + beta/vs[1][2] + gamma/vs[2][2]);
+				if(z > depthBuffer[y * width + x]){
+					depthBuffer[y * width + x] = z;
+					frameBuffer[y * width + x] = triangle->color;
+				}
 			}
 		}
 	}
@@ -142,12 +153,12 @@ void Renderer::render(Scene* scene){
 	float inf = 1e9 + 7;
 	for(int i = 0; i < scene->width*scene->height; i++){
 		frameBuffer.push_back(Vector(0.0, 0.0, 0.0));
-		depthBuffer.push_back(inf);
+		depthBuffer.push_back(-inf);
 	}
 	width = scene->width;
 	height = scene->height;
 	
-	// tan(fov * 0.5) = t / n
+	// tan(fov/180*pi*0.5) = t / n
 	// aspect = r / t
 	float t = tan(fov / 180.0 * 3.1415926 * 0.5) * std::abs(near);
 	float r = aspect * t;
@@ -171,7 +182,7 @@ void Renderer::render(Scene* scene){
 				for(int j = 0; j < 3; j++) vs[i][j] /= vs[i][3];
 				vs[i].reduce(3);
 			}
-			Renderer::renderTriangle(vs, triangle.vertex);
+			Renderer::renderTriangle(vs, &triangle);
 		}
 	}
 }
