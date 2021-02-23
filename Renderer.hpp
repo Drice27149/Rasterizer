@@ -6,7 +6,7 @@
 class Renderer {
 public:
 	void render(Scene* scene);
-	void renderTriangle(Vector* vScreen, Triangle* t);
+	void renderTriangle(Vector* vs, Triangle* t);
 	void writeImage(const char* filename);
 public:
 	// eye position, gaze & up direction
@@ -19,6 +19,7 @@ public:
 private:
 	std::vector<Vector> frameBuffer;
 	std::vector<float> depthBuffer;
+	Scene* scene;
 	int width;
 	int height;
 };

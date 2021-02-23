@@ -15,4 +15,5 @@ public:
 	int height;
 	std::vector<Object*> objects;
 	std::vector<Light*> lights;
+	Vector Ia;					// ambient lighting
 };

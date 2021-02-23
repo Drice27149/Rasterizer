@@ -18,7 +18,13 @@ float& Vector::operator[] (int off){
 	return m[off];
 }
 
-Vector Vector::operator* (Vector& v){
+const float& Vector::operator[] (int off)const{
+	assert(off >= 0 && off < size);
+	
+	return m[off];
+}
+
+Vector Vector::operator* (const Vector& v){
 	Vector& u = *(this);
 	assert(u.size == v.size);
 	
@@ -34,7 +40,7 @@ Vector Vector::operator* (float scale){
 	return res;
 }
 
-Vector Vector::operator+ (Vector& v){
+Vector Vector::operator+ (const Vector& v){
 	Vector& u = *(this);
 	assert(u.size == v.size);
 	
@@ -45,7 +51,7 @@ Vector Vector::operator+ (Vector& v){
 	return res;
 }
 
-Vector Vector::operator- (Vector& v){
+Vector Vector::operator- (const Vector& v){
 	Vector& u = *(this);
 	assert(u.size == v.size);
 	
@@ -56,7 +62,7 @@ Vector Vector::operator- (Vector& v){
 	return res;
 }
 
-float Vector::dotProduct(Vector u,Vector v){
+float Vector::dotProduct(const Vector& u, const Vector& v){
 	assert(u.size == v.size);
 
 	float res = 0.0f;
@@ -64,7 +70,7 @@ float Vector::dotProduct(Vector u,Vector v){
 	return res;
 }
 
-Vector Vector::crossProduct(Vector u, Vector v){
+Vector Vector::crossProduct(const Vector& u, const Vector& v){
 	assert(u.size == v.size && u.size == 3);
 	
 	Vector res(3);

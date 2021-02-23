@@ -1,5 +1,5 @@
 #include "Light.hpp"
 
-Light::Light(Vector position, Vector intensity): position(position), intensity(intensity){
+Light::Light(Vector position, Vector intensity): origin(position), intensity(intensity){
 	
 }

@@ -1,14 +1,24 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <cmath>
 #include "Loader.hpp"
 #include "Vector.hpp"
 
 int isNumber(char c){
-	return (c >= '0' && c <= '9') || (c == '.') || (c =='-');
+	return (c >= '0' && c <= '9') || (c == '.') || (c =='-') || (c=='e');
 }
 
 float stringToFloat(std::string& s, int l, int r){
+	// judge 1.5e-002
+	int findE = -1;
+	for(int i = l; i <= r; i++) if(s[i] == 'e') findE = i;
+	if(findE != -1){
+		// adjust scale for small obj such as bunny.obj
+		return stringToFloat(s, l, findE-1) * std::pow(10.0, stringToFloat(s, findE+1, r)+2.0);
+	}
+	
+	// judge 1.5
 	int neg = 0;
 	if(s[l] == '-') neg = 1, l++;
 	int dotPos = r+1;
@@ -56,7 +66,7 @@ std::vector<int> parseInt(std::string line){
 		else{
 			int np = ptr;
 			while(np+1 < line.size() && isNumber(line[np+1])) np++;
-			nums.push_back(stringToInt(line, ptr, np));
+			nums.push_back(stringToFloat(line, ptr, np));
 			ptr = np + 1;
 		}
 	}
@@ -67,35 +77,46 @@ void Loader::loadFile(std::string fileName){
 	std::ifstream infile(fileName);
 	std::string line;
 	std::vector<Vector> vertexs;
+	std::vector<Vector> normals;
 	triangles.clear();
 	
-	int cnt = 0;
-	
 	while(std::getline(infile, line)){
-		if(line[0] == 'v'){
+		if(line[0] == 'v' && line[1] == ' '){
+			// vertex
 			std::vector<float> nums = parseFloat(line);
 			assert(nums.size() == 3);
 			Vector vertex(3);
 			vertex.init(nums);
 			vertexs.push_back(vertex);
+			normals.push_back(Vector(0.0f, 0.0f, 0.0f));
 		}
 		else if(line[0] == 'f'){
+			// face
 			// vertex index start from 1
-			// option one, compute normal based on given vertex order
-			// option two, render both side of the triangle
-			cnt++;
-			if(cnt == 11) cnt--;
 			std::vector<int> nums = parseInt(line); 
 			Triangle triangle(vertexs[nums[0]-1], vertexs[nums[1]-1], vertexs[nums[2]-1]);
-			triangle.color = Vector((float)cnt*0.05, (float)cnt*0.05, (float)cnt*0.05); // temp
+			triangle.vid[0] = nums[0] - 1;
+			triangle.vid[1] = nums[1] - 1;
+			triangle.vid[2] = nums[2] - 1;
+			for(int num: nums) normals[num - 1] = normals[num - 1] + triangle.normal;
 			triangles.push_back(triangle);
+		}
+		else if(line[0] == '#'){
+			// comment line
 		}
 		else{
 			int haveOtherToken = 1;
 			assert(haveOtherToken == 0);
 		}
 	}
-	printf("cnt = %d\n",cnt);
+	
+	for(Vector& normal: normals) normal.normalize();
+	for(Triangle& triangle: triangles){
+		triangle.Kd = Vector(0.2, 0.2, 0.2);
+		triangle.Ks = Vector(0.5, 0.5, 0.5);
+		triangle.Ka = Vector(0.005, 0.005, 0.005);
+		for(int i = 0; i < 3; i++) triangle.normals[i] = normals[triangle.vid[i]];
+	}
 }
 
 

@@ -116,8 +116,38 @@ void getBarycentricCoordinates(Vector* v, float x, float y, float& alpha, float&
 	gamma = 1.0 - alpha - beta;
 }
 
-// vs: screen space coordinate
-// triangle: world space triangle, before camera transformation
+// l: shading point -> eye pos
+// n: shading point normal
+// note: not nomalized
+Vector getShading(Vector shadingCoordinate, Vector e, Vector n, Vector Kd, Vector Ks, Vector Ka, Vector Ia, std::vector<Light*>& lights){
+	e.normalize();
+	float p = 150.0;
+
+	Vector color(0.0, 0.0, 0.0);
+	for(Light* light: lights){
+		Vector l = light->origin - shadingCoordinate;
+		float r = l.length();
+		l.normalize();
+		Vector h = e + l;
+		h.normalize();
+		float cosine0 = Vector::dotProduct(n, l);
+		if(cosine0 < 0) cosine0 = 0;
+		float cosine1 = std::pow(Vector::dotProduct(n, h), p);
+		// calculate the sum of every light source's contribution
+		Vector conb = Ka*Ia + (light->intensity * (1.0/r*r) * cosine0) * Kd + (light->intensity * (1.0/r*r) * cosine1) * Ks;
+		color = color + conb;
+	}
+	return color;
+}
+
+// i is the data to be interpolated
+Vector interpolation(float alpha, float beta, float gamma, float Zt, Vector* vs, Vector* i){
+	return (i[0] * (alpha/vs[0][3]) + i[1] * (beta/vs[1][3]) + i[2] * (gamma/vs[2][3])) * Zt;
+}
+
+// vs: ScreenSpace coordinate
+// vv: ViewSpace coordinates, after camera transformation
+// triangle: world space triangle, used for shading
 void Renderer::renderTriangle(Vector* vs, Triangle* triangle){
 	float maxX = max(vs[0][0], vs[1][0], vs[2][0]);
 	float minX = min(vs[0][0], vs[1][0], vs[2][0]);
@@ -133,14 +163,21 @@ void Renderer::renderTriangle(Vector* vs, Triangle* triangle){
 		for(int y = minY+0.5; y <= maxY; y++){
 			float xf = (float)x + 0.5;
 			float yf = (float)y + 0.5;
-			Vector u(xf, yf, 0.0f);
+			Vector u(4);
+			std::vector<float> ud = {xf, yf, 0.0f, 0.0f};
+			u.init(ud);
 			if(isInsideTriangle(vs, u)){
 				float alpha, beta, gamma;
 				getBarycentricCoordinates(vs, xf, yf, alpha, beta, gamma);
-				float z = 1.0 / (alpha/vs[0][2] + beta/vs[1][2] + gamma/vs[2][2]);
-				if(z > depthBuffer[y * width + x]){
-					depthBuffer[y * width + x] = z;
-					frameBuffer[y * width + x] = triangle->color;
+				float z = 1.0 / (alpha/vs[0][3] + beta/vs[1][3] + gamma/vs[2][3]); // z == w
+				int zIndex = y * width + x;
+				if(z > depthBuffer[zIndex]){
+					depthBuffer[zIndex] = z;
+					
+					Vector shadingCoordinate = interpolation(alpha, beta, gamma, z, vs, triangle->vertex);
+					shadingCoordinate.reduce(3);
+					Vector normal = interpolation(alpha, beta, gamma, z, vs, triangle->normals);
+					frameBuffer[zIndex] = getShading(shadingCoordinate, origin - shadingCoordinate, normal, triangle->Kd, triangle->Ks, triangle->Ka, scene->Ia, scene->lights);
 				}
 			}
 		}
@@ -148,6 +185,7 @@ void Renderer::renderTriangle(Vector* vs, Triangle* triangle){
 }
 
 void Renderer::render(Scene* scene){
+	this->scene = scene;
 	frameBuffer.clear();
 	depthBuffer.clear();
 	float inf = 1e9 + 7;
@@ -180,7 +218,6 @@ void Renderer::render(Scene* scene){
 				tv.init(td);
 				vs[i] = M * tv;
 				for(int j = 0; j < 3; j++) vs[i][j] /= vs[i][3];
-				vs[i].reduce(3);
 			}
 			Renderer::renderTriangle(vs, &triangle);
 		}
@@ -193,7 +230,7 @@ void Renderer::writeImage(const char* filename){
 	for(int x = 0; x < height; x++){
 		for(int y = 0; y < width; y++){
 			Vector& u = frameBuffer[x * width + y];
-			printf("%.0f %.0f %.0f\n", u[0]*255.0, u[1]*255.0, u[2]*255.0);
+			printf("%.0f %.0f %.0f\n", min(255.0, u[0]*255.0), min(255.0, u[1]*255.0), min(255.0, u[2]*255.0));
 		}
 	}
 	fclose(fp);

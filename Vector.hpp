@@ -9,19 +9,20 @@ public:
 	void init(float d[]);
 	void init(std::vector<float> d);
 	float& operator[] (int off);
-	Vector operator* (Vector& other);
+	const float& operator[] (int off)const;
 	Vector operator* (float scale);
-	Vector operator+ (Vector& other);
-	Vector operator- (Vector& other);
+	Vector operator* (const Vector& other);
+	Vector operator+ (const Vector& other);
+	Vector operator- (const Vector& other);
 	void normalize();
 	void reduce(int d);
 	void print();
 	float length();
-	static float dotProduct(Vector u, Vector v);
-	static Vector crossProduct(Vector u, Vector v);
+	static float dotProduct(const Vector& u, const Vector& v);
+	static Vector crossProduct(const Vector& u, const Vector& v);
 public:
 	int size;
-private:
+public:
 	std::vector<float>m;
 };
 

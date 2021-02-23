@@ -6,6 +6,6 @@ class Light {
 public:
 	Light(Vector position, Vector Intensity);
 public:
-	Vector position;
+	Vector origin;
 	Vector intensity;
 };
