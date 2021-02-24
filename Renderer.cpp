@@ -121,7 +121,7 @@ void getBarycentricCoordinates(Vector* v, float x, float y, float& alpha, float&
 // note: not nomalized
 Vector getShading(Vector shadingCoordinate, Vector e, Vector n, Vector Kd, Vector Ks, Vector Ka, Vector Ia, std::vector<Light*>& lights){
 	e.normalize();
-	float p = 150.0;
+	float p = 50.0;
 
 	Vector color(0.0, 0.0, 0.0);
 	for(Light* light: lights){
@@ -144,6 +144,10 @@ Vector getShading(Vector shadingCoordinate, Vector e, Vector n, Vector Kd, Vecto
 Vector interpolation(float alpha, float beta, float gamma, float Zt, Vector* vs, Vector* i){
 	return (i[0] * (alpha/vs[0][3]) + i[1] * (beta/vs[1][3]) + i[2] * (gamma/vs[2][3])) * Zt;
 }
+
+Vector interpolation(float alpha, float beta, float gamma, Vector* i){
+	return i[0] * alpha + i[1] * beta + i[2] * gamma;
+}	
 
 // vs: ScreenSpace coordinate
 // vv: ViewSpace coordinates, after camera transformation
@@ -169,15 +173,25 @@ void Renderer::renderTriangle(Vector* vs, Triangle* triangle){
 			if(isInsideTriangle(vs, u)){
 				float alpha, beta, gamma;
 				getBarycentricCoordinates(vs, xf, yf, alpha, beta, gamma);
-				float z = 1.0 / (alpha/vs[0][3] + beta/vs[1][3] + gamma/vs[2][3]); // z == w
+				float z = 1.0 / (alpha/vs[0][3] + beta/vs[1][3] + gamma/vs[2][3]); 
+				// perspective correction
+				alpha = alpha / vs[0][3] * z;
+				beta = beta / vs[1][3] * z;
+				gamma = gamma / vs[2][3] * z;
+				
 				int zIndex = y * width + x;
 				if(z > depthBuffer[zIndex]){
 					depthBuffer[zIndex] = z;
 					
-					Vector shadingCoordinate = interpolation(alpha, beta, gamma, z, vs, triangle->vertex);
+					Vector Kd = triangle->Kd;
+					if(texture != nullptr){
+						Vector stCoordinate = interpolation(alpha, beta, gamma, triangle->st);
+						Kd = texture->getColor(stCoordinate[0], stCoordinate[1]) * (1.0/255.0);
+					}
+					Vector shadingCoordinate = interpolation(alpha, beta, gamma, triangle->vertex);
 					shadingCoordinate.reduce(3);
-					Vector normal = interpolation(alpha, beta, gamma, z, vs, triangle->normals);
-					frameBuffer[zIndex] = getShading(shadingCoordinate, origin - shadingCoordinate, normal, triangle->Kd, triangle->Ks, triangle->Ka, scene->Ia, scene->lights);
+					Vector normal = interpolation(alpha, beta, gamma, triangle->normals);
+					frameBuffer[zIndex] = getShading(shadingCoordinate, origin - shadingCoordinate, normal, Kd, triangle->Ks, Kd, scene->Ia, scene->lights);
 				}
 			}
 		}

@@ -66,7 +66,7 @@ std::vector<int> parseInt(std::string line){
 		else{
 			int np = ptr;
 			while(np+1 < line.size() && isNumber(line[np+1])) np++;
-			nums.push_back(stringToFloat(line, ptr, np));
+			nums.push_back(stringToInt(line, ptr, np));
 			ptr = np + 1;
 		}
 	}
@@ -78,6 +78,7 @@ void Loader::loadFile(std::string fileName){
 	std::string line;
 	std::vector<Vector> vertexs;
 	std::vector<Vector> normals;
+	std::vector<Vector> uvs;
 	triangles.clear();
 	
 	while(std::getline(infile, line)){
@@ -91,18 +92,44 @@ void Loader::loadFile(std::string fileName){
 			normals.push_back(Vector(0.0f, 0.0f, 0.0f));
 		}
 		else if(line[0] == 'f'){
-			// face
+			// face v/vt/vn
 			// vertex index start from 1
 			std::vector<int> nums = parseInt(line); 
-			Triangle triangle(vertexs[nums[0]-1], vertexs[nums[1]-1], vertexs[nums[2]-1]);
-			triangle.vid[0] = nums[0] - 1;
-			triangle.vid[1] = nums[1] - 1;
-			triangle.vid[2] = nums[2] - 1;
-			for(int num: nums) normals[num - 1] = normals[num - 1] + triangle.normal;
-			triangles.push_back(triangle);
+			if(nums.size() == 3){
+				Triangle triangle(vertexs[nums[0]-1], vertexs[nums[1]-1], vertexs[nums[2]-1]);
+				triangle.vid[0] = nums[0] - 1;
+				triangle.vid[1] = nums[1] - 1;
+				triangle.vid[2] = nums[2] - 1;
+				for(int num: nums) normals[num - 1] = normals[num - 1] + triangle.normal;
+				triangles.push_back(triangle);
+			}
+			else if(nums.size() == 6){
+				Triangle triangle(vertexs[nums[0]-1], vertexs[nums[2]-1], vertexs[nums[4]-1]);
+				for(int i = 0; i < 6; i++){
+					if(!(i%2)){
+						triangle.vid[i/2] = nums[i] - 1;
+						normals[nums[i] - 1] = normals[nums[i] - 1] + triangle.normal;
+					}
+					else{
+						triangle.st[i/2] = uvs[nums[i] - 1];
+					}
+				}
+				triangles.push_back(triangle);
+			}
+			else{
+				int invalidNumberCount = 1;
+				assert(invalidNumberCount == 0);
+			}
 		}
 		else if(line[0] == '#'){
 			// comment line
+		}
+		else if(line[0] == 'v' && line[1] == 't'){
+			std::vector<float> nums = parseFloat(line);
+			assert(nums.size() == 2);
+			Vector uv(2);
+			uv.init(nums);
+			uvs.push_back(uv);
 		}
 		else{
 			int haveOtherToken = 1;

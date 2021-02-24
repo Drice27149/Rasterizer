@@ -1,6 +1,6 @@
-tag = -std=c++17 -Wno-everything
+tag = -std=c++17 -Wno-everything `pkg-config --cflags --libs opencv4`
 
-main: build/main.o build/Matrix.o build/Vector.o build/Loader.o build/Triangle.o build/Scene.o build/Object.o build/Light.o build/Renderer.o
+main: build/main.o build/Matrix.o build/Vector.o build/Loader.o build/Triangle.o build/Scene.o build/Object.o build/Light.o build/Renderer.o build/Texture.o
 	g++ $^ -o $@ $(tag)
 	
 build/main.o: main.cpp
@@ -29,6 +29,9 @@ build/Light.o: Light.cpp Light.hpp
 	
 build/Renderer.o: Renderer.cpp Renderer.hpp
 	g++ -c $< -o $@ $(tag)
-	
+
+build/Texture.o: Texture.cpp Texture.hpp
+	g++ -c $< -o $@ $(tag)
+
 clean: 
 	rm -f build/*.o

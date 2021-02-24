@@ -2,6 +2,7 @@
 
 #include "Scene.hpp"
 #include "Triangle.hpp"
+#include "Texture.hpp"
 
 class Renderer {
 public:
@@ -16,6 +17,7 @@ public:
 	// aspect ratio = r / t
 	float fov, aspect;
 	float near, far;
+	Texture* texture;
 private:
 	std::vector<Vector> frameBuffer;
 	std::vector<float> depthBuffer;
